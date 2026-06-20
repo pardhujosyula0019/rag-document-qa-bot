@@ -1,60 +1,75 @@
 # Document Q&A Bot using Retrieval-Augmented Generation (RAG)
 
-## Overview
+## Project Overview
 
-This project is a Retrieval-Augmented Generation (RAG) based Document Question Answering system built using Python.
+Document Q&A Bot is an AI-powered question-answering system that allows users to ask questions about a collection of PDF and DOCX documents. The system uses Retrieval-Augmented Generation (RAG) to retrieve relevant document content from a vector database and generate grounded answers using Google's Gemini API.
 
-The application allows users to ask natural language questions about a collection of documents and receive accurate, context-grounded answers with source citations.
-
-Instead of relying solely on the knowledge of a Large Language Model (LLM), the system retrieves relevant information from a custom document collection and provides answers based only on the retrieved content.
+Instead of relying only on the language model's knowledge, the bot first searches the uploaded documents, retrieves the most relevant information, and then generates answers based on the retrieved content. This improves answer accuracy and provides source citations.
 
 ---
 
-## Features
+## Tech Stack
 
-* Supports PDF and DOCX documents
-* Extracts and processes document text
-* Splits documents into overlapping chunks
-* Stores embeddings in a persistent ChromaDB vector database
-* Performs semantic similarity search
-* Retrieves the most relevant document chunks
-* Generates grounded answers using Google Gemini
-* Includes source citations (filename and page number)
-* Interactive command-line interface
-* Persistent vector storage (documents are indexed only once)
+### Programming Language
+
+* Python 3.13
+
+### Frontend
+
+* Streamlit
+
+### Vector Database
+
+* ChromaDB 1.5.9
+
+### Embedding Model
+
+* Sentence Transformers
+* all-MiniLM-L6-v2
+
+### Large Language Model
+
+* Google gemini-2.5-flash
+
+### Document Processing
+
+* PyPDF
+* python-docx
+
+### Environment Management
+
+* python-dotenv
+
+### Additional Libraries
+
+* tqdm
 
 ---
 
-## Project Architecture
+## Architecture Overview
 
-```text
+The application follows a Retrieval-Augmented Generation (RAG) architecture.
+
 User Question
-      │
-      ▼
-Query Embedding
-      │
-      ▼
+↓
+SentenceTransformer Embedding
+↓
 ChromaDB Similarity Search
-      │
-      ▼
-Top-K Relevant Chunks
-      │
-      ▼
-Prompt Construction
-      │
-      ▼
-Google Gemini
-      │
-      ▼
-Grounded Answer + Citation
-```
-
----
+↓
+Top-K Relevant Chunks Retrieved
+↓
+Context Construction
+↓
+Gemini Prompt Generation
+↓
+Answer Generation
+↓
+Source-Cited Response
 
 ## Project Structure
 
 ```text
-document-qa-bot/
+rag-document-qa-bot/
 │
 ├── data/
 │   ├── Artificial_Intelligence.pdf
@@ -64,198 +79,207 @@ document-qa-bot/
 │   └── space_exploratory.docx
 │
 ├── db/
+│   └── ChromaDB vector database
 │
 ├── src/
-│   ├── __init__.py
 │   ├── config.py
 │   ├── ingest.py
 │   ├── query.py
 │   └── main.py
 │
-├── .env
-├── .gitignore
+├── app.py
 ├── requirements.txt
-└── README.md
-```
+├── README.md
+└── .env
 
----
+### Ingestion Pipeline
 
-## Technologies Used
-
-### Programming Language
-
-* Python 3.11+
-
-### Document Processing
-
-* pypdf
-* python-docx
-
-### Embeddings
-
-* Sentence Transformers
-* all-MiniLM-L6-v2
-
-### Vector Database
-
-* ChromaDB
-
-### Large Language Model
-
-* Google Gemini
-
-### Utilities
-
-* python-dotenv
-* tqdm
+Documents
+↓
+Text Extraction
+↓
+Chunking
+↓
+Embedding Generation
+↓
+Store in ChromaDB
 
 ---
 
 ## Chunking Strategy
 
-The system uses a fixed-size chunking strategy.
+The project uses fixed-size overlapping chunking.
 
-### Configuration
+Configuration:
 
 * Chunk Size: 1000 characters
 * Chunk Overlap: 200 characters
 
-### Why Overlap?
+Reason:
 
-Chunk overlap helps preserve context at chunk boundaries and reduces the possibility of losing important information during retrieval.
-
-Each chunk stores metadata including:
-
-* Source filename
-* Page number
-* Chunk range
+Large documents cannot be embedded as a single vector. Splitting documents into overlapping chunks preserves context across chunk boundaries and improves retrieval quality.
 
 ---
 
-## Retrieval Process
+## Embedding Model and Vector Database
 
-1. User enters a question.
-2. The question is converted into an embedding using the same embedding model used during indexing.
-3. ChromaDB performs similarity search.
-4. Top-K relevant chunks are retrieved.
-5. Retrieved chunks are used as context for Gemini.
-6. Gemini generates a grounded answer with citations.
+### Embedding Model
+
+Model:
+all-MiniLM-L6-v2
+
+Reason:
+
+* Lightweight
+* Fast inference
+* Strong semantic similarity performance
+* Suitable for small-to-medium RAG applications
+
+### Vector Database
+
+Database:
+ChromaDB
+
+Reason:
+
+* Easy local deployment
+* Persistent storage
+* Fast similarity search
+* Open-source and beginner-friendly
 
 ---
 
-## Hallucination Prevention
+## Setup Instructions
 
-The system uses a grounding prompt that instructs Gemini to:
+### 1. Clone Repository
 
-* Use only the retrieved document context.
-* Avoid external knowledge.
-* Return a fallback response if the answer is not present in the provided documents.
+git clone https://github.com/pardhujosyula0019/rag-document-qa-bot.git
 
-Fallback Response:
+cd rag-document-qa-bot
 
-```text
-I am sorry, but the provided documents do not contain the answer to your question.
-```
+### 2. Create Virtual Environment
 
----
-
-## Installation
-
-### Clone Repository
-
-```bash
-git clone <repository-url>
-cd document-qa-bot
-```
-
-### Create Virtual Environment
-
-```bash
 python -m venv venv
-```
 
-### Activate Virtual Environment
+### 3. Activate Virtual Environment
 
 Windows:
 
-```bash
 venv\Scripts\activate
-```
 
-Linux / macOS:
+### 4. Install Dependencies
 
-```bash
-source venv/bin/activate
-```
-
-### Install Dependencies
-
-```bash
 pip install -r requirements.txt
-```
+
+### 5. Configure Environment Variables
+
+Create a .env file:
+
+GEMINI_API_KEY=YOUR_API_KEY
+
+### 6. Run Ingestion
+
+python -m src.ingest
+
+### 7. Launch Application
+
+streamlit run app.py
 
 ---
 
-## Environment Setup
+## Environment Variables
 
-Create a `.env` file in the project root.
+Required:
 
-```env
-GEMINI_API_KEY=your_api_key_here
-```
+GEMINI_API_KEY
 
----
+How to obtain:
 
-## Index Documents
+1. Visit Google AI Studio.
+2. Generate an API key.
+3. Store it in the .env file.
 
-Run:
-
-```bash
-py -m src.ingest
-```
-
-This will:
-
-* Read documents
-* Extract text
-* Create chunks
-* Generate embeddings
-* Store vectors in ChromaDB
+Never commit API keys to GitHub.
 
 ---
 
-## Run the Application
+## Example Queries
 
-```bash
-py -m src.main
-```
+### Question 1
 
-Example:
+What is Artificial Intelligence?
 
-```text
-Question: What is Artificial Intelligence?
+Expected Theme:
 
-Answer:
-Artificial Intelligence is a computing concept that helps machines solve problems and learn from experience.
+Definition and characteristics of AI.
 
-(Source: Artificial_Intelligence.pdf, Page: 1)
-```
+### Question 2
+
+What are renewable energy sources?
+
+Expected Theme:
+
+Solar, wind, hydroelectric and sustainable energy.
+
+### Question 3
+
+What is cybersecurity?
+
+Expected Theme:
+
+Protection of systems, networks and digital information.
+
+### Question 4
+
+What is space law?
+
+Expected Theme:
+
+Legal framework governing activities in outer space.
+
+### Question 5
+
+How is AI expected to impact future industries?
+
+Expected Theme:
+
+Automation, productivity and technological advancement.
+
+---
+
+## Known Limitations
+
+1. Retrieval quality depends on chunk size configuration.
+
+2. The system only searches indexed documents.
+
+3. Answers may be incomplete if relevant information is split across multiple chunks.
+
+4. Small embedding models may miss subtle semantic relationships.
+
+5. The application currently supports only PDF and DOCX files.
+
+6. Documents must be re-indexed after adding new files.
 
 ---
 
 ## Future Improvements
 
-* Streamlit web interface
-* Support for TXT files
-* Better PDF text cleaning
-* Hybrid search (keyword + semantic)
-* Re-ranking retrieved chunks
-* Multi-document citations
+* Dynamic document upload
+* Conversational memory
+* Hybrid search
+* Metadata filtering
+* Larger embedding models
+* Multi-user support
 
 ---
 
-## Author
+## Deployment
 
-Submitted as part of the AI Engineering Internship Assignment.
+Frontend: Streamlit Cloud
 
-Built using Python, ChromaDB, Sentence Transformers, and Google Gemini.
+Repository:
+https://github.com/pardhujosyula0019/rag-document-qa-bot
+
+Deployment:
+https://rag-document-app-bot-guxcx5rguiut4hbsyes34b.streamlit.app
